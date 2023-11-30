@@ -51,10 +51,34 @@ type fart struct {
 	val    int
 }
 
+func getCString(value string) (*C.char, func()) {
+	retString := C.CString(value)
+	return retString, func() { C.free(unsafe.Pointer(retString)) }
+}
+
+func getCStringArray(values []string) ([]*C.char, func()) {
+	var retStringArray []*C.char
+	var retFreeArray []func()
+	for _, value := range values {
+		retString, retFree := getCString(value)
+		retStringArray = append(retStringArray, retString)
+		retFreeArray = append([]func(){retFree}, retFreeArray...)
+	}
+	return retStringArray, func() {
+		for _, freeFunc := range retFreeArray {
+			freeFunc()
+		}
+	}
+}
+
 func Fart() {
 	fmt.Println("fart")
-	argc := C.int(len(os.Args))
-	argv := C.makeCharArray(argc)
+	//argc := C.int(len(os.Args))
+	//argv := C.makeCharArray(argc)
+	argvArr, freeArgvArr := getCStringArray(os.Args)
+	defer freeArgvArr()
+	argv := &(argvArr[0])
+	argc := C.int(len(argvArr))
 	// Is there no way for failures to happen here? A lot is happening. I'm just learning Go. Know
 	// C++, Java, Python, etc., but not familiar with the walrus operator other than recognizing its
 	// existence, and (that it apparently is a declaration + definition/initial assignment)?.
@@ -66,10 +90,10 @@ func Fart() {
 	// 2. Calling the C function `makeCharArray`, with pass-by-value argument that is the `int`
 	//    value of `len(os.Args)`, which is `1`.
 	// 3.
-	defer C.freeCharArray(argv, argc)
+	//defer C.freeCharArray(argv, argc)
 	//goland:noinspection SpellCheckingInspection
-	optstring := C.CString("h")
-	defer C.free(unsafe.Pointer(optstring))
+	optstring, freeOptstring := getCString("h")
+	defer freeOptstring()
 	opts := [1]C.struct_option{{
 		name: C.CString("help"),
 		has_arg: C.no_argument,
@@ -107,7 +131,7 @@ func Fart() {
 	}
 
 	for int(optind) < len(os.Args) {
-		fmt.Printf("argument: %s\n", C.GoString(argv[optind]))
+		//fmt.Printf("argument: %s\n", C.GoString(argv[optind]))
 		optind++
 	}
 }
