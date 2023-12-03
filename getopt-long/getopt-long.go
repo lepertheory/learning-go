@@ -32,7 +32,6 @@ func getCSlice[TFrom any, TTo any](values []TFrom, converter func(TFrom)(TTo, fu
 
 func Fart() {
 	fmt.Println("fart")
-	//argvArr, freeArgvArr := getCStringArray(os.Args)
 
 	argvArr, freeArgvArr := getCSlice(os.Args, func(from string)(*C.char, func()) { return getCString(from); })
 	defer freeArgvArr()
@@ -84,28 +83,3 @@ func Fart() {
 		optind++
 	}
 }
-
-//// C helper functions:
-//
-//static char**makeCharArray(int size) {
-//return calloc(sizeof(char*), size);
-//}
-//
-//static void setArrayString(char **a, char *s, int n) {
-//a[n] = s;
-//}
-//
-//static void freeCharArray(char **a, int size) {
-//int i;
-//for (i = 0; i < size; i++)
-//free(a[i]);
-//free(a);
-//}
-//
-//// Build C array in Go from sargs []string
-//
-//cargs := C.makeCharArray(C.int(len(sargs)))
-//defer C.freeCharArray(cargs, C.int(len(sargs)))
-//for i, s := range sargs {
-//C.setArrayString(cargs, C.CString(s), C.int(i))
-//}
