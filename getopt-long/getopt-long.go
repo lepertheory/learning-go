@@ -147,12 +147,15 @@ func (o *GetOpt) Process() {
 		} else {
 			opt = shortOpts[string(rune(result))]
 		}
-		// TODO: There has to be a reason this is such a pain, and it has to be that I'm doing
-		//       something wrong.
-		// FIXME: Initialize at the right time.
-		optResult := o.Results[*opt]
-		optResult.SetCount++
-		o.Results[*opt] = optResult
+		// FIXME: This should probably be an error.
+		if opt != nil {
+			// TODO: There has to be a reason this is such a pain, and it has to be that I'm doing
+			//       something wrong.
+			// FIXME: Initialize at the right time.
+			optResult := o.Results[*opt]
+			optResult.SetCount++
+			o.Results[*opt] = optResult
+		}
 	}
 
 }
