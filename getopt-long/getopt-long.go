@@ -3,7 +3,6 @@ package getopt_long
 import (
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"unsafe"
 )
@@ -156,56 +155,4 @@ func (o *GetOpt) Process() {
 		o.Results[*opt] = optResult
 	}
 
-}
-
-func Fart() {
-	fmt.Println("fart")
-
-	argvArr, freeArgvArr := getCSlice(os.Args, func(from string)(*C.char, func()) { return getCString(from); })
-	defer freeArgvArr()
-	argv := &(argvArr[0])
-	argc := C.int(len(argvArr))
-
-	//goland:noinspection SpellCheckingInspection
-	optstring, freeOptstring := getCString("h")
-	defer freeOptstring()
-
-	opts := [1]C.struct_option{{
-		name: C.CString("help"),
-		has_arg: C.no_argument,
-		flag: (*C.int)(C.NULL),
-		val: C.int(0),
-	}}
-	for i := range opts {
-		defer C.free(unsafe.Pointer(opts[i].name))
-	}
-	for i, s := range os.Args {
-		argvArr[i] = C.CString(s)
-		defer C.free(unsafe.Pointer(argvArr[i]))
-	}
-	optind := C.int(0)
-	for {
-		retval := C.getopt_long(argc, argv, optstring, &(opts[0]), &optind)
-		if retval == -1 {
-			break
-		}
-		fmt.Printf("optstring: %s\n", C.GoString(optstring))
-		fmt.Printf("opts[0].name: %s\n", C.GoString(opts[0].name))
-		fmt.Printf("opts[0].has_arg: %d\n", int(opts[0].has_arg))
-		fmt.Printf("opts[0].flag: %d\n", opts[0].flag)
-		fmt.Printf("opts[0].val: %d\n", opts[0].val)
-		fmt.Printf("retval: %d\n", retval)
-		fmt.Printf("optind: %d\n", optind)
-
-		if retval == 0 {
-			fmt.Printf("Long option: %s\n", C.GoString(opts[optind].name))
-		} else {
-			fmt.Printf("Short option: %s\n", string(rune(retval)))
-		}
-	}
-
-	for int(optind) < len(os.Args) {
-		//fmt.Printf("argument: %s\n", C.GoString(argv[optind]))
-		optind++
-	}
 }
