@@ -48,6 +48,10 @@ func (suite *GetoptLongSuite) randomString(length int) string {
 	return sb.String()
 }
 
+func TestGetoptLongSuite(t *testing.T) {
+	suite.Run(t, new(GetoptLongSuite))
+}
+
 func (suite *GetoptLongSuite) SetupSuite() {
 	var n int64
 	var err error
@@ -63,15 +67,18 @@ func (suite *GetoptLongSuite) SetupSuite() {
 	suite.T().Logf("-seed=%d", n)
 }
 
-func (suite *GetoptLongSuite) TestGetCString() {
+func (suite *GetoptLongSuite) TestGetCString_Basic() {
 	testValue := let(func() string {
 		retval := suite.randomString(suite.Rng.Intn(1024 * 1024))
 		return retval
 	})
-	testActual, _ := getCString(v(testValue))
+	testActual, testFree := getCString(v(testValue))
+	defer testFree()
 	assert.Equal(suite.T(), getGoString(testActual), v(testValue))
 }
 
-func TestGetoptLongSuite(t *testing.T) {
-	suite.Run(t, new(GetoptLongSuite))
+func (suite *GetoptLongSuite) TestToOptstring() {
+	assert.Equal(suite.T(), ArgNotAllowed.toOptstring(), "")
+	assert.Equal(suite.T(), ArgOptional.toOptstring(), "::")
+	assert.Equal(suite.T(), ArgRequired.toOptstring(), ":")
 }
