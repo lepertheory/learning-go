@@ -41,6 +41,10 @@ func getCString(value string) (*C.char, func()) {
 	return retString, func() { C.free(unsafe.Pointer(retString)) }
 }
 
+func getGoString(value *C.char) string {
+	return C.GoString(value)
+}
+
 func getCSlice[TFrom any, TTo any](values []TFrom, converter func(TFrom)(TTo, func())) ([]TTo, func()) {
 	var retArray []TTo
 	var retFrees []func()

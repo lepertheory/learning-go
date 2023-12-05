@@ -20,13 +20,13 @@ func main() {
 				Required: false,
 				Arg: gol.ArgNotAllowed,
 			},
-			//// Second test, can we do two?
-			//{
-			//	Name: pointer("fart"),
-			//	Short: pointer("f"),
-			//	Required: false,
-			//	Arg: gol.ArgNotAllowed,
-			//},
+			// Second test, can we do two?
+			{
+				Name: pointer("fart"),
+				Short: pointer("f"),
+				Required: false,
+				Arg: gol.ArgNotAllowed,
+			},
 		},
 		Arguments: os.Args,
 	}
