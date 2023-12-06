@@ -71,6 +71,11 @@ func getOptstring(options []Option) string {
 	return retval.String()
 }
 
+func toGoString(value *C.char, freeFunc func()) string {
+	defer freeFunc()
+	return getGoString(value)
+}
+
 func (o ArgRequirement) toOptstring() string {
 	switch o {
 	case ArgNotAllowed: return ""
