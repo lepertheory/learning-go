@@ -81,4 +81,13 @@ func (suite *GetoptLongSuite) TestToOptstring() {
 	assert.Equal(suite.T(), ArgNotAllowed.toOptstring(), "")
 	assert.Equal(suite.T(), ArgOptional.toOptstring(), "::")
 	assert.Equal(suite.T(), ArgRequired.toOptstring(), ":")
+	var bloop ArgRequirement
+	bloop = 7
+	assert.PanicsWithErrorf(
+		suite.T(),
+		fmt.Sprintf("Unexpected ArgRequirement value: %d", bloop),
+		func() { bloop.toOptstring() },
+		"Unexpected ArgRequirement value: %d",
+		bloop,
+	)
 }
