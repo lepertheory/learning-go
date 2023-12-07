@@ -68,22 +68,48 @@ var _ = Describe("getCString", func() {
 	})
 })
 
-var _ = Describe("toOptString", func() {
-	DescribeTable(
-		"valid options",
-		func(input ArgRequirement, expected string) {
-			Expect(input.toOptstring()).To(Equal(expected))
-		},
-		Entry("when an argument is not allowed", ArgNotAllowed, ""),
-		Entry("when an argument is optional", ArgOptional, "::"),
-		Entry("when an argument is required", ArgRequired, ":"),
-	)
+var _ = Describe("ArgRequirement", func() {
+	Describe("toOptString", func() {
+		DescribeTable(
+			"valid options",
+			func(input ArgRequirement, expected string) {
+				Expect(input.toOptstring()).To(Equal(expected))
+			},
+			Entry("when an argument is not allowed", ArgNotAllowed, ""),
+			Entry("when an argument is optional", ArgOptional, "::"),
+			Entry("when an argument is required", ArgRequired, ":"),
+		)
 
-	When("an invalid value is used", func() {
-		It("panics", func() {
-			var invalid ArgRequirement
-			invalid = math.MaxInt
-			Expect(func() { invalid.toOptstring() }).To(Panic())
+		When("an invalid value is used", func() {
+			It("panics", func() {
+				var invalid ArgRequirement
+				invalid = math.MaxInt
+				Expect(func() { invalid.toOptstring() }).To(Panic())
+			})
+		})
+	})
+})
+
+func pointer[T any](val T) *T {
+	return &val
+}
+
+
+var _ = Describe("GetOpt", func() {
+	Describe("Process", func() {
+		It("works with --help", func() {
+			helpOption := Option{
+				Name: pointer("help"),
+				Short: pointer("h"),
+				Required: false,
+				Arg: ArgNotAllowed,
+			}
+			getopt := GetOpt{
+				Options: []Option{helpOption},
+				Arguments: []string{"program", "--help"},
+			}
+			getopt.Process()
+			Expect(getopt.Results).To(Equal(map[Option]OptionResult{helpOption: {SetCount: 1}}))
 		})
 	})
 })
