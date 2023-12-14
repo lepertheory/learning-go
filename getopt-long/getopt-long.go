@@ -62,6 +62,7 @@ func getCSlice[TFrom any, TTo any](values []TFrom, converter func(TFrom)(TTo, fu
 
 func getOptstring(options []Option) string {
 	var retval strings.Builder
+	retval.WriteRune(':')
 	for _, option := range options {
 		if option.Short != nil {
 			retval.WriteString(*option.Short)
@@ -99,7 +100,6 @@ func (o ArgRequirement) toHasArg() C.int {
 }
 
 func (o *GetOpt) Process() {
-
 	argvSlice, argvSliceCloser := getCSlice(
 		o.Arguments,
 		func(from string)(*C.char, func()) { return getCString(from) },
@@ -131,18 +131,20 @@ func (o *GetOpt) Process() {
 
 	longOpts := make(map[string]*Option)
 	shortOpts := make(map[string]*Option)
-	for _, opt := range(o.Options) {
+	for i := range o.Options {
+		opt := &(o.Options[i])
 		if opt.Name	!= nil {
-			longOpts[*opt.Name] = &opt
+			longOpts[*opt.Name] = opt
 		}
 		if opt.Short != nil {
-			shortOpts[*opt.Short] = &opt
+			shortOpts[*opt.Short] = opt
 		}
 	}
 
 	// FIXME: Is this the right place to initialize this map?
 	o.Results = map[Option]OptionResult{}
 	optind := C.int(0)
+	C.optind = C.int(0)
 	for {
 		// FIXME: Handle option arguments.
 		result := C.getopt_long(argc, argv, optstring, &(optionsSlice[0]), &optind)
@@ -166,5 +168,4 @@ func (o *GetOpt) Process() {
 			o.Results[*opt] = optResult
 		}
 	}
-
 }

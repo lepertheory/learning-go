@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o errtrace
+set -o nounset
+set -o pipefail
+
+run() {
+  echo -n Running:  1>&2
+  printf ' %q' "$@" 1>&2
+  echo              1>&2
+
+  "$@"
+}
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"; readonly SCRIPT_DIR
+GIT_ROOT="$(cd -- "$SCRIPT_DIR" && git rev-parse --show-toplevel)"; readonly GIT_ROOT
+
+readonly COVERAGE_FILE=lepertheory.net.cover
+
+cd "$GIT_ROOT"
+run ginkgo -r \
+           --randomize-all \
+           --fail-fast \
+           --trace \
+           --race \
+           --cover \
+           --coverprofile="$COVERAGE_FILE" \
+           "$@"
+
+run go tool cover -html="$COVERAGE_FILE"
