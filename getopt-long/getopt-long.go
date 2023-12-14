@@ -19,8 +19,8 @@ const (
 )
 
 type Option struct {
-	Name *string
-	Short *string
+	Name string
+	Short rune
 	Required bool
 	Arg ArgRequirement
 }
@@ -36,8 +36,8 @@ type GetOpt struct {
 	Results   map[Option]OptionResult
 }
 
-func getCString(value string) (*C.char, func()) {
-	retString := C.CString(value)
+func getCString(value *string) (*C.char, func()) {
+	retString := C.CString(*value)
 	return retString, func() { C.free(unsafe.Pointer(retString)) }
 }
 
@@ -64,8 +64,8 @@ func getOptstring(options []Option) string {
 	var retval strings.Builder
 	retval.WriteRune(':')
 	for _, option := range options {
-		if option.Short != nil {
-			retval.WriteString(*option.Short)
+		if option.Short != 0 {
+			retval.WriteRune(option.Short)
 			retval.WriteString(option.Arg.toOptstring())
 		}
 	}
@@ -100,22 +100,26 @@ func (o ArgRequirement) toHasArg() C.int {
 }
 
 func (o *GetOpt) Process() {
+	argPointers := make([]*string, len(o.Arguments))
+	for i := range o.Arguments {
+		argPointers[i] = &o.Arguments[i]
+	}
 	argvSlice, argvSliceCloser := getCSlice(
-		o.Arguments,
-		func(from string)(*C.char, func()) { return getCString(from) },
+		argPointers,
+		func(from *string)(*C.char, func()) { return getCString(from) },
 	)
 	defer argvSliceCloser()
 	argv := &(argvSlice[0])
 	argc := C.int(len(argvSlice))
 
 	optstringBacking := getOptstring(o.Options)
-	optstring, optstringCloser := getCString(optstringBacking)
+	optstring, optstringCloser := getCString(&optstringBacking)
 	defer optstringCloser()
 
 	optionsSlice, optionsSliceCloser := getCSlice(
 		o.Options,
 		func(from Option)(C.struct_option, func()) {
-			name, nameCloser := getCString(*from.Name)
+			name, nameCloser := getCString(&from.Name)
 
 			// FIXME: What happens if .toHasArg() panics and is recovered? I'm missing something,
 			//        this shouldn't be so painful.
@@ -130,14 +134,14 @@ func (o *GetOpt) Process() {
 	defer optionsSliceCloser()
 
 	longOpts := make(map[string]*Option)
-	shortOpts := make(map[string]*Option)
+	shortOpts := make(map[rune]*Option)
 	for i := range o.Options {
 		opt := &(o.Options[i])
-		if opt.Name	!= nil {
-			longOpts[*opt.Name] = opt
+		if opt.Name != "" {
+			longOpts[opt.Name] = opt
 		}
-		if opt.Short != nil {
-			shortOpts[*opt.Short] = opt
+		if opt.Short != 0 {
+			shortOpts[opt.Short] = opt
 		}
 	}
 
@@ -156,7 +160,7 @@ func (o *GetOpt) Process() {
 		if result == 0 {
 			opt = longOpts[C.GoString(optionsSlice[optind].name)]
 		} else {
-			opt = shortOpts[string(rune(result))]
+			opt = shortOpts[rune(result)]
 		}
 		// FIXME: This should probably be an error.
 		if opt != nil {

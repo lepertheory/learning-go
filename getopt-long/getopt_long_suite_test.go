@@ -45,20 +45,20 @@ func randomString(length int, rng *rand.Rand) string {
 
 var _ = Describe("getCString", func() {
 	var inputLen int
-	var input LetFunc[string]
+	var input LetFunc[*string]
 	var rng *rand.Rand
 
 	BeforeEach(func() {
 		rng = rand.New(rand.NewSource(GinkgoRandomSeed()))
 		inputLen = rng.Intn(20)
-		input = let(func() string { return randomString(inputLen, rng) })
+		input = let(func() *string { return pointer(randomString(inputLen, rng)) })
 	})
 
 	When("working on a sub-MB string", func() {
 		BeforeEach(func() { inputLen = rng.Intn(1024 * 1024) })
 
 		It("works", func() {
-			Expect(toGoString(getCString(v(input)))).To(Equal(v(input)))
+			Expect(toGoString(getCString(v(input)))).To(Equal(*v(input)))
 		})
 	})
 
@@ -101,24 +101,24 @@ var _ = Describe("GetOpt", func() {
 	var getopt LetFunc[*GetOpt]
 	var optHelp LetFunc[Option]
 	var optHelpArg LetFunc[ArgRequirement]
-	var optHelpName LetFunc[*string]
+	var optHelpName LetFunc[string]
 	var optHelpRequired LetFunc[bool]
-	var optHelpShort LetFunc[*string]
+	var optHelpShort LetFunc[rune]
 	var optList LetFunc[Option]
 	var optListArg LetFunc[ArgRequirement]
-	var optListName LetFunc[*string]
+	var optListName LetFunc[string]
 	var optListRequired LetFunc[bool]
-	var optListShort LetFunc[*string]
+	var optListShort LetFunc[rune]
 	var options LetFunc[[]Option]
 	var programName LetFunc[string]
 
 	BeforeEach(func() {
 		programName = let(func() string { return "program" })
 
-		arguments = let(func() []string { return []string{v(programName), "--" + *v(optHelpName)} })
+		arguments = let(func() []string { return []string{v(programName), "--" + v(optHelpName)} })
 
-		optHelpName = let(func() *string { return pointer("help") })
-		optHelpShort = let(func() *string { return pointer("h") })
+		optHelpName = let(func() string { return "help" })
+		optHelpShort = let(func() rune { return 'h' })
 		optHelpRequired = let(func() bool { return false })
 		optHelpArg = let(func() ArgRequirement { return ArgNotAllowed })
 		optHelp = let(func() Option {
@@ -130,8 +130,8 @@ var _ = Describe("GetOpt", func() {
 			}
 		})
 
-		optListName = let(func() *string { return pointer("list") })
-		optListShort = let(func() *string { return pointer("l") })
+		optListName = let(func() string { return "list" })
+		optListShort = let(func() rune { return 'l' })
 		optListRequired = let(func() bool { return false })
 		optListArg = let(func() ArgRequirement { return ArgOptional })
 		optList = let(func() Option {
@@ -169,7 +169,7 @@ var _ = Describe("GetOpt", func() {
 		When("the help option is misspelled", func() {
 			BeforeEach(func() {
 				arguments = let(func() []string { return []string{v(programName), "--help"} })
-				optHelpName = let(func() *string { return pointer("hlep") })
+				optHelpName = let(func() string { return "hlep" })
 			})
 			It("does something else", func() {
 				// TODO: Test better.
